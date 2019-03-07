@@ -12,6 +12,7 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
+import { GraphQLExecutor } from '../dist/requestPipelineAPI';
 
 /*
  * GraphQLServerOptions
@@ -37,6 +38,7 @@ export interface GraphQLServerOptions<
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
+  executor?: GraphQLExecutor;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
