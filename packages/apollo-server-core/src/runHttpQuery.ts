@@ -7,6 +7,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  hasPersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
@@ -75,6 +76,15 @@ function throwHttpGraphQLError<E extends Error>(
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): never {
+  const defualtHeaders = { 'Content-Type': 'application/json' };
+  // PersistedQueryNotFoundError's should not be cached
+  // if errors contains PersistedQueryNotFoundError then force no-cache
+  const headers = hasPersistedQueryNotFoundError(errors)
+    ? {
+        ...defualtHeaders,
+        'Cache-Control': 'private, no-cache, must-revalidate',
+      }
+    : defualtHeaders;
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
@@ -86,9 +96,7 @@ function throwHttpGraphQLError<E extends Error>(
         : errors,
     }),
     true,
-    {
-      'Content-Type': 'application/json',
-    },
+    headers,
   );
 }
 
@@ -280,6 +288,7 @@ export async function processHTTPRequest<TContext>(
 
       try {
         const requestContext = buildRequestContext(request);
+
         const response = await processGraphQLRequest(options, requestContext);
 
         // This code is run on parse/validation errors and any other error that
@@ -297,12 +306,16 @@ export async function processHTTPRequest<TContext>(
 
         body = prettyJSONStringify(serializeGraphQLResponse(response));
       } catch (error) {
+        console.log('------ buildRequestContext');
         if (error instanceof InvalidGraphQLRequestError) {
           throw new HttpQueryError(400, error.message);
         } else if (
           error instanceof PersistedQueryNotSupportedError ||
           error instanceof PersistedQueryNotFoundError
         ) {
+          console.log(
+            '******* error instanceof PersistedQueryNotSupportedError',
+          );
           return throwHttpGraphQLError(200, [error], options);
         } else {
           throw error;
@@ -311,8 +324,11 @@ export async function processHTTPRequest<TContext>(
     }
   } catch (error) {
     if (error instanceof HttpQueryError) {
+      console.log('******* error instanceof HttpQueryError');
       throw error;
     }
+
+    console.log('******* throwHttpGraphQLError');
     return throwHttpGraphQLError(500, [error], options);
   }
 

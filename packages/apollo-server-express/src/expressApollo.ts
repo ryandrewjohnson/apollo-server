@@ -45,6 +45,7 @@ export function graphqlExpress(
             res.setHeader(name, value);
           }
         }
+
         res.write(graphqlResponse);
         res.end();
       },
@@ -58,6 +59,8 @@ export function graphqlExpress(
             res.setHeader(name, value);
           }
         }
+
+        console.log('###### runHttpQuery', error);
 
         res.statusCode = error.statusCode;
         res.write(error.message);

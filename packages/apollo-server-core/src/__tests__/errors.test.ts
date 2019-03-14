@@ -9,6 +9,8 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
+  hasPersistedQueryNotFoundError,
+  PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 
 describe('Errors', () => {
@@ -182,6 +184,30 @@ describe('Errors', () => {
 
       expect(formattedError.extensions.exception.field1).toEqual('property1');
       expect(formattedError.extensions.exception.field2).toEqual('property2');
+    });
+  });
+  describe('hasPersistedQueryNotFoundError()', () => {
+    it('should return true if errors contains error of type PersistedQueryNotFoundError', () => {
+      const errors = [
+        new PersistedQueryNotFoundError(),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryNotFoundError(errors);
+      expect(result).toBe(true);
+    });
+
+    it('should return false if errors does not contain error of type PersistedQueryNotFoundError', () => {
+      const errors = [
+        new ForbiddenError('401'),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryNotFoundError(errors);
+      expect(result).toBe(false);
+    });
+
+    it('should return false if an error is thrown', () => {
+      const result = hasPersistedQueryNotFoundError({});
+      expect(result).toBe(false);
     });
   });
 });

@@ -1220,7 +1220,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         uri = serverInfo.url;
       });
 
-      it('returns PersistedQueryNotFound on the first try', async () => {
+      it.only('returns PersistedQueryNotFound on the first try', async () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({
