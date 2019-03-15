@@ -7,7 +7,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
-  hasPersistedQueryNotFoundError,
+  hasPersistedQueryError,
 } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
@@ -77,9 +77,8 @@ function throwHttpGraphQLError<E extends Error>(
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): never {
   const defualtHeaders = { 'Content-Type': 'application/json' };
-  // PersistedQueryNotFoundError's should not be cached
-  // if errors contains PersistedQueryNotFoundError then force no-cache
-  const headers = hasPersistedQueryNotFoundError(errors)
+  // force no-cache on PersistedQuery errors
+  const headers = hasPersistedQueryError(errors)
     ? {
         ...defualtHeaders,
         'Cache-Control': 'private, no-cache, must-revalidate',
@@ -306,16 +305,12 @@ export async function processHTTPRequest<TContext>(
 
         body = prettyJSONStringify(serializeGraphQLResponse(response));
       } catch (error) {
-        console.log('------ buildRequestContext');
         if (error instanceof InvalidGraphQLRequestError) {
           throw new HttpQueryError(400, error.message);
         } else if (
           error instanceof PersistedQueryNotSupportedError ||
           error instanceof PersistedQueryNotFoundError
         ) {
-          console.log(
-            '******* error instanceof PersistedQueryNotSupportedError',
-          );
           return throwHttpGraphQLError(200, [error], options);
         } else {
           throw error;
@@ -324,11 +319,8 @@ export async function processHTTPRequest<TContext>(
     }
   } catch (error) {
     if (error instanceof HttpQueryError) {
-      console.log('******* error instanceof HttpQueryError');
       throw error;
     }
-
-    console.log('******* throwHttpGraphQLError');
     return throwHttpGraphQLError(500, [error], options);
   }
 

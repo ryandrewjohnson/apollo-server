@@ -9,8 +9,9 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
-  hasPersistedQueryNotFoundError,
+  hasPersistedQueryError,
   PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
 
 describe('Errors', () => {
@@ -186,27 +187,36 @@ describe('Errors', () => {
       expect(formattedError.extensions.exception.field2).toEqual('property2');
     });
   });
-  describe('hasPersistedQueryNotFoundError()', () => {
-    it('should return true if errors contains error of type PersistedQueryNotFoundError', () => {
+  describe('hasPersistedQueryError()', () => {
+    it('should return true if errors contain error of type PersistedQueryNotFoundError', () => {
       const errors = [
         new PersistedQueryNotFoundError(),
         new AuthenticationError('401'),
       ];
-      const result = hasPersistedQueryNotFoundError(errors);
+      const result = hasPersistedQueryError(errors);
       expect(result).toBe(true);
     });
 
-    it('should return false if errors does not contain error of type PersistedQueryNotFoundError', () => {
+    it('should return true if errors contain error of type PersistedQueryNotSupportedError', () => {
+      const errors = [
+        new PersistedQueryNotSupportedError(),
+        new AuthenticationError('401'),
+      ];
+      const result = hasPersistedQueryError(errors);
+      expect(result).toBe(true);
+    });
+
+    it('should return false if errors does not contain PersistedQuery error', () => {
       const errors = [
         new ForbiddenError('401'),
         new AuthenticationError('401'),
       ];
-      const result = hasPersistedQueryNotFoundError(errors);
+      const result = hasPersistedQueryError(errors);
       expect(result).toBe(false);
     });
 
     it('should return false if an error is thrown', () => {
-      const result = hasPersistedQueryNotFoundError({});
+      const result = hasPersistedQueryError({});
       expect(result).toBe(false);
     });
   });

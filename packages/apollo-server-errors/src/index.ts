@@ -210,14 +210,6 @@ export class UserInputError extends ApolloError {
   }
 }
 
-export function hasPersistedQueryNotFoundError(errors: Array<Error>): boolean {
-  try {
-    return errors.some(error => error instanceof PersistedQueryNotFoundError);
-  } catch (err) {
-    return false;
-  }
-}
-
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
@@ -271,4 +263,16 @@ export function formatApolloErrors(
       }
     }
   }) as Array<ApolloError>;
+}
+
+export function hasPersistedQueryError(errors: Array<Error>): boolean {
+  try {
+    return errors.some(
+      error =>
+        error instanceof PersistedQueryNotFoundError ||
+        error instanceof PersistedQueryNotSupportedError,
+    );
+  } catch (err) {
+    return false;
+  }
 }
